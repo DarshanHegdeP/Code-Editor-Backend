@@ -1,0 +1,91 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  tasks:
+    # ---------------------------------------------------------
+    # 1. PRE-CHECKS: See what is already installed
+    # ---------------------------------------------------------
+    - name: Check if Docker is already installed
+      command: which docker
+      register: docker_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Check if Minikube is already installed
+      command: which minikube
+      register: minikube_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Check if Kubectl is already installed
+      command: which kubectl
+      register: kubectl_check
+      ignore_errors: yes
+      changed_when: false
+
+    # ---------------------------------------------------------
+    # 2. INSTALLATION: Only run if tools are missing
+    # ---------------------------------------------------------
+    - name: Install required prerequisites (only if Docker missing)
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg-agent
+          - software-properties-common
+          - conntrack
+        state: present
+        update_cache: yes
+      when: docker_check.rc != 0
+
+    - name: Install Docker (only if missing)
+      apt:
+        name: docker.io
+        state: present
+      when: docker_check.rc != 0
+
+    - name: Ensure Docker service is running
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      when: docker_check.rc != 0
+
+    - name: Add user to docker group
+      user:
+        name: "{{ ansible_env.USER }}"
+        groups: docker
+        append: yes
+      # We run this even if Docker is installed, just to be safe
+      # (It won't break anything if you are already in the group)
+
+    - name: Download Minikube (only if missing)
+      get_url:
+        url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        dest: /usr/local/bin/minikube
+        mode: '0755'
+      when: minikube_check.rc != 0
+
+    - name: Download Kubectl (only if missing)
+      get_url:
+        url: "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl"
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+      when: kubectl_check.rc != 0
+
+    # ---------------------------------------------------------
+    # 3. CONFIGURATION: Start Minikube
+    # ---------------------------------------------------------
+    - name: Check Minikube status
+      become: false
+      command: minikube status
+      register: minikube_status
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Start Minikube (if not running)
+      become: false
+      command: minikube start --driver=docker
+      when: minikube_status.rc != 0

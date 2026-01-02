@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: piston-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: piston-api
+  template:
+    metadata:
+      labels:
+        app: piston-api
+    spec:
+      containers:
+      - name: api
+        image: mini-piston:latest
+        imagePullPolicy: Never # Use local image built in Minikube
+        ports:
+        - containerPort: 3000
+        # SECURITY CRITICAL: This gives the pod root access to the host docker
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: tmp-jobs
+          mountPath: /tmp/piston-jobs # Shared path for code files
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      # We map the host's /tmp so the sibling containers can see the files
+      # written by the API pod.
+      - name: tmp-jobs 
+        hostPath:
+          path: /tmp/piston-jobs
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: piston-service
+spec:
+  type: NodePort
+  selector:
+    app: piston-api
+  ports:
+    - port: 80
+      targetPort: 3000
+      nodePort: 30000
