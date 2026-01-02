@@ -21,3 +21,33 @@ sudo apt update && sudo apt install ansible -y
 # Run the playbook (prompts for sudo password)
 ansible-playbook ansible/setup.yml --ask-become-pass
 ```
+ Installation & Deployment
+Step 1: Start Infrastructure
+Bash
+
+minikube start --driver=docker
+Step 2: Pre-load Compiler Images (Crucial)
+Prevents API timeouts on first run.
+
+```bash
+
+minikube image load python:3.9-alpine
+minikube image load node:18-alpine
+minikube image load golang:1.19-alpine
+minikube image load gcc:latest
+```
+
+# 1. Point terminal to Minikube's Docker daemon
+eval $(minikube docker-env)
+
+# 2. Build the image inside Minikube
+cd ~/mini-piston/app
+docker build -t mini-piston:latest .
+
+# 3. Apply Kubernetes config
+kubectl apply -f ~/mini-piston/k8s/deployment.yaml
+
+# 4. Restart the Pod to update
+kubectl rollout restart deployment/piston-api
+
+echo "http://$(minikube ip):30000/execute"
