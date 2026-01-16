@@ -235,7 +235,101 @@ sudo -u jenkins minikube start
 ```
 
 ---
+GitHub → Jenkins Webhook (Auto Trigger on git push)
+Right now:
+Pipeline ✅ automated
+Trigger ❌ manual (“Build Now”)
+After this:
+git push → Jenkins runs automatically
+⚠️ IMPORTANT REALITY CHECK (READ THIS FIRST)
+Webhooks require GitHub to reach Jenkins
+That means Jenkins must be:
+Publicly accessible OR
+Temporarily exposed using ngrok
+Since your Jenkins is running locally, we’ll use ngrok.
+This is normal and correct.
+✅ METHOD: Webhook Using ngrok (BEST for Local Jenkins)
+STEP 1: Install ngrok
+Copy code
+Bash
+sudo apt install unzip -y
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-linux-amd64.zip
+unzip ngrok-stable-linux-amd64.zip
+sudo mv ngrok /usr/local/bin/
+Verify:
+Copy code
+Bash
+ngrok version
+STEP 2: Start Jenkins (If Not Running)
+Copy code
+Bash
+sudo systemctl start jenkins
+Jenkins UI:
+Copy code
 
+http://localhost:8080
+STEP 3: Expose Jenkins Using ngrok
+Run:
+Copy code
+Bash
+ngrok http 8080
+You will see output like:
+Copy code
+
+Forwarding https://abc123.ngrok-free.app -> http://localhost:8080
+📌 COPY the HTTPS URL
+Example:
+Copy code
+
+https://abc123.ngrok-free.app
+Keep this terminal OPEN.
+STEP 4: Enable Webhook Trigger in Jenkins Job
+Open Jenkins UI
+Open your pipeline job
+Click Configure
+Scroll to Build Triggers
+✅ Check:
+Copy code
+
+GitHub hook trigger for GITScm polling
+Click Save
+STEP 5: Add Webhook in GitHub Repository
+Open your GitHub repo
+Go to Settings → Webhooks → Add webhook
+Fill like this:
+Payload URL:
+Copy code
+
+https://abc123.ngrok-free.app/github-webhook/
+⚠️ /github-webhook/ is mandatory
+Content type:
+Copy code
+
+application/json
+Secret: (leave empty)
+Which events?
+Copy code
+
+Just the push event
+✅ Active
+Click Add webhook
+STEP 6: Test the Webhook
+In GitHub:
+Go to Webhooks
+Click your webhook
+Click Redeliver
+You should see:
+Copy code
+
+✔ 200 OK
+STEP 7: Test Full Automation 🚀
+Make a small code change:
+Copy code
+Bash
+git commit -am "Test webhook"
+git push origin main
+👉 Jenkins should start automatically
+👉 No “Build Now” click needed
 ## 📝 Notes
 
 - Minikube runs under the Jenkins user to ensure proper permissions
