@@ -19,7 +19,8 @@ jobs:
         fi
 
     - name: Validate environment using Ansible
-      run: ansible-playbook ansible/validate.yml
+      run: ansible-playbook -i localhost, ansible/validate.yml
+
 
     - name: Use Minikube Docker daemon
       run: |
