@@ -138,73 +138,11 @@ sudo -u jenkins kubectl get nodes
 
 ## 🔄 Jenkins Pipeline Configuration
 
-### ***7. Jenkinsfile***
 
-The pipeline automates the entire build and deployment process:
 
-```groovy
-pipeline {
-    agent any
+### ***7. Create Jenkins Pipeline Job***
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/DarshanHegdeP/Code-Editor-Backend.git'
-            }
-        }
-
-        stage('Use Minikube Docker') {
-            steps {
-                sh '''
-                  eval $(minikube docker-env)
-                  docker info | grep Name
-                '''
-            }
-        }
-
-        stage('Build Backend Image') {
-            steps {
-                sh '''
-                  eval $(minikube docker-env)
-                  docker build -t mini-piston:latest .
-                '''
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-            }
-        }
-
-        stage('Restart Backend Pod') {
-            steps {
-                sh '''
-                  kubectl rollout restart deployment piston-api
-                  kubectl rollout status deployment piston-api
-                '''
-            }
-        }
-    }
-}
-```
-
----
-
-### ***8. Commit Jenkinsfile to Repository***
-
-```bash
-git add Jenkinsfile
-git commit -m "Add Jenkins CI/CD pipeline"
-git push origin main
-```
-
----
-
-### ***9. Create Jenkins Pipeline Job***
-
-1. Open Jenkins dashboard
+1. Open Jenkins dashboard (http://localhost:8080/)
 2. Click **New Item**
 3. Enter name: `mini-piston-backend-cicd`
 4. Select **Pipeline**
@@ -220,7 +158,7 @@ git push origin main
 
 ## ▶️ Running the CI/CD Pipeline
 
-### ***10. Execute Pipeline***
+### ***8. Execute Pipeline***
 
 1. Open the Jenkins job
 2. Click **Build Now**
@@ -234,7 +172,7 @@ A green build indicates successful CI/CD execution.
 
 ---
 
-### ***11. Verify Deployment***
+### ***9. Verify Deployment***
 
 Get Minikube IP:
 
