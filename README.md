@@ -51,3 +51,4 @@ kubectl apply -f ~/mini-piston/k8s/deployment.yaml
 kubectl rollout restart deployment/piston-api
 
 echo "http://$(minikube ip):30000/execute"
+# Code-Editor-Backend
