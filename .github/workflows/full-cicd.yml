@@ -12,18 +12,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Verify tools
+    - name: Install Ansible (if missing)
       run: |
-        docker version
-        kubectl version --client
-        minikube version
+        if ! command -v ansible >/dev/null; then
+          sudo apt update && sudo apt install -y ansible
+        fi
 
-    - name: Use Minikube Docker
+    - name: Validate environment using Ansible
+      run: ansible-playbook ansible/validate.yml
+
+    - name: Use Minikube Docker daemon
       run: |
         eval $(minikube docker-env)
         docker info | grep Name
 
-    - name: Build Docker image
+    - name: Build Mini-Piston image
       run: |
         eval $(minikube docker-env)
         docker build -t mini-piston:latest .
@@ -31,7 +34,7 @@ jobs:
     - name: Deploy to Kubernetes
       run: kubectl apply -f k8s/deployment.yaml
 
-    - name: Restart API
+    - name: Restart API deployment
       run: |
         kubectl rollout restart deployment piston-api
         kubectl rollout status deployment piston-api

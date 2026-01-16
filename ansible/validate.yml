@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  connection: local
+  become: false
+  tasks:
+    - name: Validate Docker access
+      command: docker ps
+      changed_when: false
+
+    - name: Validate kubectl connectivity
+      command: kubectl get nodes
+      changed_when: false
+
+    - name: Ensure Minikube is running
+      command: minikube start --driver=docker
+      changed_when: false
