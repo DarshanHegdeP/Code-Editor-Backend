@@ -25,6 +25,7 @@ mini-piston/
 ---
 
 ## 📦 Installation Guide
+*First clone the Repo and after that do below steps *
 
 ### ***1. Install Java (Jenkins Dependency)***
 
@@ -111,6 +112,10 @@ newgrp docker
 ```
 
 ---
+
+The Ansible playbook is executed once to prepare the system
+(Docker, Minikube, kubectl). This step is not part of the CI/CD
+pipeline and is intentionally kept separate.
 
 ### ***6. Configure Minikube for Jenkins***
 
