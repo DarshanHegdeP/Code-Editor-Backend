@@ -32,7 +32,7 @@ app.post('/execute', (req, res) => {
 
     const config = RUNTIMES[language];
     if (!config) return res.status(400).send({ message: "Unsupported language" });
-
+    console.log(`Executing code in language: ${language}`);
     const id = crypto.randomUUID();
     const filename = `source.${config.ext}`;
     const hostPath = `/tmp/piston-jobs/${id}`; 
