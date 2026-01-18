@@ -21,7 +21,7 @@ pipeline {
         stage('Load Image into Minikube') {
             steps {
                 sh '''
-                  minikube image load mini-piston:latest
+                  sudo minikube image load mini-piston:latest
                 '''
             }
         }
