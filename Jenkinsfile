@@ -10,19 +10,9 @@ pipeline {
             }
         }
 
-        stage('Switch to Minikube Docker') {
-            steps {
-                sh '''
-                  eval $(minikube docker-env)
-                  docker info | grep Name
-                '''
-            }
-        }
-
         stage('Build Backend Image') {
             steps {
                 sh '''
-                  eval $(minikube docker-env)
                   docker build -t mini-piston:latest .
                 '''
             }
@@ -30,7 +20,9 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
+                sh '''
+                  kubectl apply -f k8s/deployment.yaml
+                '''
             }
         }
 
