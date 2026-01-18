@@ -12,7 +12,7 @@ pipeline {
         stage('Check Minikube Status') {
             steps {
                 sh '''
-                  minikube status | grep -q Running || {
+                   sudo minikube status | grep -q Running || {
                     echo "Minikube is not running. Start it first.";
                     exit 1;
                   }
