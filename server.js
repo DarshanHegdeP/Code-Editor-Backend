@@ -58,6 +58,8 @@ app.post('/execute', (req, res) => {
         });
     });
     console.log(`Job ID: ${id} - Code executed`);
+    console.log(`Job ID: ${id} - Code executed`);
+
 });
 
 app.listen(3000, () => console.log('Mini-Piston listening on port 3000'));
