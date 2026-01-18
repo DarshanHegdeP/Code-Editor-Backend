@@ -9,13 +9,12 @@ pipeline {
                     url: 'https://github.com/DarshanHegdeP/Code-Editor-Backend.git'
             }
         }
-        stage('Check Minikube Status') {
+
+        stage('Switch to Minikube Docker') {
             steps {
                 sh '''
-                   sudo minikube status | grep -q Running || {
-                    echo "Minikube is not running. Start it first.";
-                    exit 1;
-                  }
+                  eval $(minikube docker-env)
+                  docker info | grep Name
                 '''
             }
         }
@@ -23,24 +22,15 @@ pipeline {
         stage('Build Backend Image') {
             steps {
                 sh '''
+                  eval $(minikube docker-env)
                   docker build -t mini-piston:latest .
-                '''
-            }
-        }
-
-        stage('Load Image into Minikube') {
-            steps {
-                sh '''
-                  sudo minikube image load mini-piston:latest
                 '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh '''
-                  kubectl apply -f k8s/deployment.yaml
-                '''
+                sh 'kubectl apply -f k8s/deployment.yaml'
             }
         }
 
