@@ -9,6 +9,16 @@ pipeline {
                     url: 'https://github.com/DarshanHegdeP/Code-Editor-Backend.git'
             }
         }
+        stage('Check Minikube Status') {
+            steps {
+                sh '''
+                  minikube status | grep -q Running || {
+                    echo "Minikube is not running. Start it first.";
+                    exit 1;
+                  }
+                '''
+            }
+        }
 
         stage('Build Backend Image') {
             steps {
