@@ -116,41 +116,31 @@ The Ansible playbook is executed once to prepare the system (Docker, Minikube, k
 
 ---
 
-### **6. Configure Minikube (System User)**
+### **6. Configure Minikube for Jenkins**
 
-Clean any existing Minikube installation:
+Clean any existing Minikube installations:
 
 ```bash
-minikube delete --all --purge
-rm -rf ~/.minikube ~/.kube
+# Remove Jenkins-owned Minikube only (for this project)
+sudo rm -rf /var/lib/jenkins/.minikube
+sudo rm -rf /var/lib/jenkins/.kube
+
+sudo rm -rf /home/*/.minikube /home/*/.kube /var/lib/minikube
 ```
 
-Start Minikube as System user:
+Start Minikube as Jenkins user:
 
 ```bash
-minikube start --driver=docker --memory=3000 --cpus=2
-
+sudo -u jenkins minikube start --driver=docker --memory=3000 --cpus=2
 ```
 
 Verify Minikube status:
 
 ```bash
-minikube status
-kubectl get nodes
-
+sudo -u jenkins minikube status
+sudo -u jenkins kubectl get nodes
 ```
----
-### **6.1 Allow Jenkins to Access Kubernetes**
 
-Since Minikube runs as the system user, Jenkins needs access to the Kubernetes cluster.
-
-Copy kubeconfig to Jenkins home:
-
-```bash
-sudo mkdir -p /var/lib/jenkins/.kube
-sudo cp ~/.kube/config /var/lib/jenkins/.kube/config
-sudo chown -R jenkins:jenkins /var/lib/jenkins/.kube
-```
 ---
 
 ## 🔄 Jenkins Pipeline Configuration
@@ -192,7 +182,7 @@ A green build indicates successful CI/CD execution.
 Get Minikube IP:
 
 ```bash
-minikube ip
+sudo -u jenkins minikube ip
 ```
 
 Check running pods:
@@ -239,7 +229,7 @@ To run CI/CD after system restart:
 sudo systemctl start jenkins
 
 # Start Minikube
-minikube start
+sudo -u jenkins minikube start
 
 # Open Jenkins dashboard and click "Build Now"
 ```
@@ -369,10 +359,7 @@ git push origin main
 
 ## 📝 Notes
 
-- Minikube runs as under the **system user**
--  Jenkins does **not** manage Minikube
-- Jenkins builds Docker images locally
-- Jenkins deploys using `kubectl`
+- Minikube runs under the Jenkins user to ensure proper permissions
 - Docker images are built directly in Minikube's Docker daemon
 - The pipeline uses `imagePullPolicy: Never` to use locally built images
 - All deployments are local and do not require external registries
