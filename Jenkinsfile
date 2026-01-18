@@ -18,6 +18,14 @@ pipeline {
             }
         }
 
+        stage('Load Image into Minikube') {
+            steps {
+                sh '''
+                  minikube image load mini-piston:latest
+                '''
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
