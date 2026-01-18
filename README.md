@@ -116,28 +116,41 @@ The Ansible playbook is executed once to prepare the system (Docker, Minikube, k
 
 ---
 
-### **6. Configure Minikube for Jenkins**
+### **6. Configure Minikube (System User)**
 
-Clean any existing Minikube installations:
+Clean any existing Minikube installation:
 
 ```bash
-sudo minikube delete --all --purge
-sudo rm -rf /home/*/.minikube /home/*/.kube /var/lib/minikube
+minikube delete --all --purge
+rm -rf ~/.minikube ~/.kube
 ```
 
-Start Minikube as Jenkins user:
+Start Minikube as System user:
 
 ```bash
-sudo -u jenkins minikube start --driver=docker --memory=3000 --cpus=2
+minikube start --driver=docker --memory=3000 --cpus=2
+
 ```
 
 Verify Minikube status:
 
 ```bash
-sudo -u jenkins minikube status
-sudo -u jenkins kubectl get nodes
-```
+minikube status
+kubectl get nodes
 
+```
+---
+### **6.1 Allow Jenkins to Access Kubernetes**
+
+Since Minikube runs as the system user, Jenkins needs access to the Kubernetes cluster.
+
+Copy kubeconfig to Jenkins home:
+
+```bash
+sudo mkdir -p /var/lib/jenkins/.kube
+sudo cp ~/.kube/config /var/lib/jenkins/.kube/config
+sudo chown -R jenkins:jenkins /var/lib/jenkins/.kube
+```
 ---
 
 ## 🔄 Jenkins Pipeline Configuration
@@ -179,7 +192,7 @@ A green build indicates successful CI/CD execution.
 Get Minikube IP:
 
 ```bash
-sudo -u jenkins minikube ip
+minikube ip
 ```
 
 Check running pods:
@@ -226,7 +239,7 @@ To run CI/CD after system restart:
 sudo systemctl start jenkins
 
 # Start Minikube
-sudo -u jenkins minikube start
+minikube start
 
 # Open Jenkins dashboard and click "Build Now"
 ```
@@ -356,7 +369,10 @@ git push origin main
 
 ## 📝 Notes
 
-- Minikube runs under the Jenkins user to ensure proper permissions
+- Minikube runs as under the **system user**
+-  Jenkins does **not** manage Minikube
+- Jenkins builds Docker images locally
+- Jenkins deploys using `kubectl`
 - Docker images are built directly in Minikube's Docker daemon
 - The pipeline uses `imagePullPolicy: Never` to use locally built images
 - All deployments are local and do not require external registries
