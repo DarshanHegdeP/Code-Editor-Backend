@@ -6,15 +6,32 @@ const crypto = require('crypto');
 const app = express();
 
 // app.use(cors());
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"]
-}));
+// app.use(cors({
+//   origin: "*",
+//   methods: ["GET", "POST", "OPTIONS"],
+//   allowedHeaders: ["Content-Type"]
+// }));
 
-app.options("/execute", cors()); // 🔥 THIS IS CRITICAL
+// app.options("/execute", cors()); // 🔥 THIS IS CRITICAL
+
+// app.use(express.json());
+const app = express();
+
+// ✅ CORS FIRST
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+
+  // 🔥 Handle preflight HERE
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 app.use(express.json());
+
 
 const RUNTIMES = {
     "python": { image: "python:3.9-alpine", cmd: "python", ext: "py" },
