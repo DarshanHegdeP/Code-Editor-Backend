@@ -85,7 +85,4 @@
       ignore_errors: yes
       changed_when: false
 
-    - name: Start Minikube (if not running)
-      become: false
-      command: minikube start --driver=docker
-      when: minikube_status.rc != 0
+    
