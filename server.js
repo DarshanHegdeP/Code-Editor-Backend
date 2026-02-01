@@ -41,6 +41,7 @@ app.post('/execute', (req, res) => {
     fs.mkdirSync(hostPath, { recursive: true });
     fs.writeFileSync(`${hostPath}/${filename}`, code);
 
+console.log("Hello");
     // Limit memory to 128MB to prevent crashes
     const dockerCmd = `docker run --rm --memory=128m --network none -v ${hostPath}:/code -w /code ${config.image} ${config.cmd} ${filename}`;
 
