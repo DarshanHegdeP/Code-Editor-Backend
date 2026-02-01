@@ -2,6 +2,7 @@
 - hosts: localhost
   connection: local
   become: true
+
   tasks:
     # ---------------------------------------------------------
     # 1. PRE-CHECKS: See what is already installed
@@ -53,13 +54,11 @@
         enabled: yes
       when: docker_check.rc != 0
 
-    - name: Add user to docker group
+    - name: Add Jenkins user to docker group (CI requirement)
       user:
-        name: "{{ ansible_env.USER }}"
+        name: jenkins
         groups: docker
         append: yes
-      # We run this even if Docker is installed, just to be safe
-      # (It won't break anything if you are already in the group)
 
     - name: Download Minikube (only if missing)
       get_url:
@@ -76,13 +75,54 @@
       when: kubectl_check.rc != 0
 
     # ---------------------------------------------------------
-    # 3. CONFIGURATION: Start Minikube
+    # 3. CONFIGURATION: Start Minikube as Jenkins (robust check)
     # ---------------------------------------------------------
-    - name: Check Minikube status
+    - name: Check if Minikube container exists (Jenkins)
       become: false
-      command: minikube status
-      register: minikube_status
-      ignore_errors: yes
+      become_user: jenkins
+      shell: >
+        docker ps -a --format '{{ "{{.Names}}" }}' | grep -w minikube
+      register: minikube_container
+      failed_when: false
       changed_when: false
 
-    
+    - name: Start Minikube as Jenkins (log to file)
+      become: false
+      become_user: jenkins
+      shell: |
+        LOG_FILE="$HOME/minikube-start.log"
+        echo "==== Minikube start at $(date) ====" >> "$LOG_FILE"
+        minikube start \
+          --driver=docker \
+          --memory=3000 \
+          --cpus=2 >> "$LOG_FILE" 2>&1
+      args:
+        executable: /bin/bash
+      when: minikube_container.rc != 0
+
+    - name: Wait for Minikube API server to be ready
+      become: false
+      become_user: jenkins
+      shell: |
+        until minikube status | grep -q "apiserver: Running"; do
+          echo "Waiting for Kubernetes API..."
+          sleep 10
+        done
+      changed_when: false
+      when: minikube_container.rc != 0
+
+    # ---------------------------------------------------------
+    # 4. PRE-PULL RUNTIME IMAGES INSIDE MINIKUBE (Jenkins-owned)
+    # ---------------------------------------------------------
+    - name: Pre-pull runtime images inside Minikube
+      become: false
+      become_user: jenkins
+      shell: |
+        eval $(minikube docker-env)
+        docker pull node:18-alpine
+        docker pull python:3.9-alpine
+        docker pull golang:1.19-alpine
+        docker pull gcc:latest
+      args:
+        executable: /bin/bash
+      when: minikube_container.rc != 0
