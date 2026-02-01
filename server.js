@@ -5,7 +5,15 @@ const { exec } = require('child_process');
 const crypto = require('crypto');
 const app = express();
 
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"]
+}));
+
+app.options("/execute", cors()); // 🔥 THIS IS CRITICAL
+
 app.use(express.json());
 
 const RUNTIMES = {
