@@ -28,6 +28,7 @@ app.post('/execute', (req, res) => {
     else {
         language = req.body.language;
         code = req.body.code;
+	console.log("hello");
     }
 
     const config = RUNTIMES[language];
